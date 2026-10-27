@@ -1,83 +1,94 @@
-# Assignment 3. Maze Escape
+# Assignment 3: Maze Escape
 
-Student ID:
-Name:
-Group:
-Maze size (rows x columns):
+**Student ID:** 250653  
+**Language:** Java 17 or newer  
+**Maze size:** 12 × 12
 
-This file is the report. Fill it in as you go. How to start: `START_HERE.md`. The task: `docs/Assignment3.pdf`.
+## Build and run
+
+Run these commands from the repository root:
+
+```text
+javac -d out src/*.java
+java -cp out Main
+java tools/Check.java
+```
+
+`Main` reads `data/walls.txt` and `data/slides.txt`. It prints the assignment results and generates the maze visualization in `output/maze.png` and `output/maze.html`.
 
 ## Program output
 
-The 13 lines your program prints on your data (`java -cp out Main`):
+```text
+Broken: 143
+Kept: 121
+Last broken wall: 209
+MST cost: 42046
+Heaviest broken wall: 786
+Path length: 30
+DFS visited: 119
+Dead ends: 46
+Zones: 12
+Largest zone: 20
+Is DAG: 0
+Flow stages: 8
+Fastest route cost: 19
+```
 
-    Broken:
-    Kept:
-    Last broken wall:
-    MST cost:
-    Heaviest broken wall:
-    Path length:
-    DFS visited:
-    Dead ends:
-    Zones:
-    Largest zone:
-    Is DAG:
-    Flow stages:
-    Fastest route cost:
+## Mission questions
 
-My maze:
+### Mission 0: Disjoint Set Union
 
-![maze](output/maze.png)
+`find` returns the representative root of the set containing an element, while `union` joins two different sets and reports whether a merge occurred. Path compression shortens parent chains during `find`, and union by size attaches the smaller tree below the larger tree, giving an amortized time of `O(α(n))` per operation.
 
-## Questions
+### Mission 1: Build the maze
 
-Answer in your own words, two or three sentences each.
+A connected acyclic graph on `R*C` cells is a tree, so it always contains exactly `R*C - 1` broken walls. The rectangular grid contains `R*(C-1) + C*(R-1)` inner walls; subtracting the broken walls leaves `(R-1)*(C-1)` kept walls.
 
-Mission 0. What do find and union do, and what makes them fast in your code?
+### Mission 2: Cheapest maze
 
-Mission 1. Why is Broken always R*C - 1, and Kept always (R-1)*(C-1)?
+Kruskal and Prim both produce an MST cost of **42046**. Kruskal repeatedly accepts the cheapest wall that connects two different DSU components, while Prim repeatedly adds the cheapest wall crossing from the current tree to an unvisited cell; therefore both construct a minimum spanning tree of the same weighted connected graph.
 
-Mission 2. My MST cost from Kruskal and from Prim, and why they are equal:
+### Mission 3: Escape
 
-Mission 3. Why is there exactly one path between two cells? How did you avoid a stack overflow on a huge maze?
+There is exactly one path between any two cells because the open maze is a tree: two distinct paths would form a cycle. The DFS uses explicit arrays as a stack instead of recursive calls, so its depth does not consume the Java call stack even for a 1000 × 1000 maze.
 
-Mission 4. Why does the second pass of Kosaraju go on the reversed graph? Why do the slides have no cycle exactly when Zones equals the number of cells?
+### Mission 4: Zones
 
-Mission 5. Why is it enough to go through the zones in the order of their numbers? What does this pass cost?
+The first Kosaraju pass records vertices by finishing time. Processing that order on the reversed graph keeps the second DFS inside one source component of the remaining condensation graph, so each traversal identifies exactly one SCC and the resulting zone numbers follow topological order. A directed graph has no cycle exactly when every SCC contains one cell, which is equivalent to `Zones` being equal to the number of cells.
+
+### Mission 5: Fastest route
+
+Every edge between different zones goes from a smaller zone number to a larger one, so processing zones once in numerical order processes every predecessor before its successors. Relaxing all condensation edges in this order computes both the longest zone chain and the cheapest route in `O(z + m)` time, where `z` is the number of zones and `m` is the number of slides.
 
 ## AI use
 
-The syllabus requires you to say which AI tools you used and for what. Write the tool (ChatGPT, Copilot, other) and what you asked it: explain an idea, find an error, review code. Write "none" if you did not use any. If you took code or text from a book or a website, give the source here.
+ChatGPT was used as a development assistant for algorithm implementation, debugging, testing, and README preparation. It generated substantial portions of the implementation and documentation under review during the development process.
 
 ## Timing (Mission 7)
 
-Milliseconds, 5 runs each, from `java -cp out Bench`.
+Milliseconds, five runs each, measured with `java -cp out Bench`:
 
-| maze | Kruskal | Prim |
-|---|---|---|
-| 100 x 100 | | |
-| 300 x 300 | | |
-| 1000 x 1000 | | |
+| Maze | Kruskal | Prim |
+|---|---:|---:|
+| 100 × 100 | Pending | Pending |
+| 300 × 300 | Pending | Pending |
+| 1000 × 1000 | Pending | Pending |
 
-What do the numbers say about how the time grows? Two or three sentences.
+Benchmark interpretation will be added after collecting the required measurements.
 
 ## Complexity
 
-n is the number of cells, m the number of walls (or slides). Fill in every algorithm you wrote.
-
-| algorithm | time | space | assumptions |
+| Algorithm | Time | Space | Assumptions |
 |---|---|---|---|
-| DSU find and union | | | |
-| Kruskal | | | |
-| Prim | | | |
-| DFS | | | |
-| Kosaraju | | | |
-| Route in the zone graph | | | |
+| DSU `find` and `union` | `O(α(n))` amortized | `O(n)` | Union by size and path compression |
+| Kruskal | `O(m log m)` | `O(n + m)` | Sorting all walls, then DSU operations |
+| Prim | `O(m log m)` | `O(n + m)` | Binary priority queue and adjacency lists |
+| Iterative DFS | `O(n + m)` | `O(n + m)` | Explicit stack; for a maze tree, `m = n - 1` |
+| Kosaraju | `O(n + m)` | `O(n + m)` | Two iterative DFS passes and both graph directions |
+| Route in the zone graph | `O(z + m)` | `O(z + m)` | Zones are already in topological order |
 
-## Before you submit
+## Visualization
 
-- data/walls.txt, data/slides.txt and output/maze.png are in the repository.
-- `java tools/Check.java` shows all examples right.
-- This README is filled in, the program output and the section AI use included.
-- The work is pushed to main (at least one commit per mission) and the repository is public.
-- The link is attached in Moodle.
+![Maze visualization](output/maze.png)
+
+The interactive version is available at [`output/maze.html`](output/maze.html).
