@@ -10,8 +10,18 @@ public class Maze {
      * Returns the indexes of the broken walls, in the order of breaking.
      */
     public static int[] breakWalls(Input.Walls w) {
-        // TODO
-        return new int[0];
+        DisjointSet sets = new DisjointSet(w.cells());
+        int[] selected = new int[Math.max(0, w.cells() - 1)];
+        int count = 0;
+        for (int wall = 0; wall < w.count() && count < selected.length; wall++) {
+            if (sets.union(w.a()[wall], w.b()[wall])) {
+                selected[count++] = wall;
+            }
+        }
+        if (count != selected.length) {
+            throw new IllegalArgumentException("The wall graph is not connected");
+        }
+        return selected;
     }
 
     /**
